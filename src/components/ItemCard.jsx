@@ -1,15 +1,15 @@
 import { useValue } from "../context";
 import styles from "../styles/ItemCard.module.css";
 
-function ItemCard({ name, price }) {
+function ItemCard({name, price }) {
   const value = useValue();
 
   const handleAddClick = () => {
-    value.handleAdd(price, { name, price });
+    value.handleAdd({ name, price });
   };
 
   const handleRemoveClick = () => {
-    value.handleRemove(price, { name, price });
+    value.handleRemove({ name, price });
   };
 
   return (

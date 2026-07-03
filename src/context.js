@@ -1,4 +1,4 @@
-import { createContext, useContext, useState } from "react";
+import { createContext, useContext, useEffect, useState } from "react";
 import CartModal from "./components/CartModal";
 
 //creation of context
@@ -12,45 +12,66 @@ export function useValue() {
 
 //provide context
 export function CustomItemContext({ children }) {
-  const [total, setTotal] = useState(0);
-  const [item, setItem] = useState(0);
   const [toggle, setToggle] = useState(false);
   const [cartItems, setCartItems] = useState([]);
+  const [total, setTotal] = useState(0);
+  const [count, setCount] = useState(0);
 
-  const handleAdd = (price, item) => {
-    setTotal((prevTotal) => prevTotal + price);
-    setItem((prevItem) => prevItem + 1);
+  useEffect(() => {
+    let total = cartItems
+      .map((i) => i.price * i.qty)
+      .reduce((acc, item) => acc + item, 0);
+    let count = cartItems.reduce((acc, item) => acc + item.qty, 0);
+    
+    if (!isNaN(total) && !isNaN(count)) {
+      setTotal(total);
+      setCount(count);
+    }
 
+    console.log(`Total: ${total} Count: ${count}`);
+  }, [cartItems]);
+
+  const handleAdd = (item) => {
     setCartItems((prevCart) => {
-      const existingItem = prevCart.find((i)=>i.name===item.name)
+      const existingItem = prevCart.find((i) => i.name === item.name);
 
-      if(existingItem){
-        return prevCart.map((items)=>items.name===item.name?{...items,qty:items.qty+1}:items)
+      if (existingItem) {
+        return prevCart.map((items) =>
+          items.name === item.name ? { ...items, qty: items.qty + 1 } : items,
+        );
       }
 
-      return [...prevCart, { id: Date.now(), name: item.name, price: item.price, qty: 1 }];
+      return [
+        ...prevCart,
+        { id: Date.now(), name: item.name, price: item.price, qty: 1 },
+      ];
     });
-    console.log(`Total: ${total} Item : ${item}`);
   };
 
-  const handleRemove = (price,item) => {
-    setTotal((prevTotal) => (prevTotal - price < 0 ? 0 : prevTotal - price));
-    setItem((prevItem) => (prevItem - 1 < 0 ? 0 : prevItem - 1));
+  const handleRemove = (item) => {
+    setCartItems((prevCart) => {
+      const existingItem = prevCart.find(
+        (cartItem) => cartItem.name === item.name,
+      );
 
-    setCartItems((prevCart)=>{
-      const existingItem = prevCart.find((cartItem)=>cartItem.name === item.name)
-
-      if(existingItem){
-        return prevCart.map((curr)=>(curr.name===item.name&&curr.qty>0?{...curr,qty:curr.qty-1}:curr))
+      if (existingItem) {
+        return prevCart.map((curr) =>
+          curr.name === item.name && curr.qty > 0
+            ? { ...curr, qty: curr.qty - 1 }
+            : curr,
+        );
       }
 
-      return [...prevCart,{id: Date.now(), name:item.name, price: item.price}]
-    })
+      return [
+        ...prevCart,
+        { id: Date.now(), name: item.name, price: item.price },
+      ];
+    });
   };
 
   const handleReset = () => {
     setTotal(0);
-    setItem(0);
+    setCount(0);
   };
 
   const handleToggle = () => {
@@ -64,7 +85,7 @@ export function CustomItemContext({ children }) {
     <itemContext.Provider
       value={{
         total,
-        item,
+        count,
         toggle,
         cartItems,
         handleAdd,
@@ -72,7 +93,7 @@ export function CustomItemContext({ children }) {
         handleReset,
         handleToggle,
         handleClear,
-        setCartItems
+        setCartItems,
       }}
     >
       {toggle && <CartModal />}
